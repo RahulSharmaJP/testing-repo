@@ -1,0 +1,76 @@
+---
+title: Google Pay
+description: Accept Google Pay through HyperCheckout, the Express Checkout SDK, or the Express Checkout API.
+regions: ["in", "sea"]
+---
+
+Google Pay is available in India and Southeast Asia. The flows differ enough
+between the two that most of this page is variant content.
+
+## How it works
+
+<Variant region="in">
+In India, Google Pay runs over UPI. The customer picks Google Pay at checkout,
+Juspay creates a UPI intent, and the customer approves the collect request in
+their Google Pay app. Juspay receives the callback and moves the order to
+`CHARGED`.
+</Variant>
+
+<Variant region="sea">
+In Southeast Asia, Google Pay is a card wallet. The customer authorises in the
+Google Pay sheet, which returns an encrypted payment token. That token is passed
+to Juspay, decrypted by the acquirer, and processed as a card transaction. 3DS may
+still be triggered, in which case the order passes through `PENDING_VBV`.
+</Variant>
+
+## Prerequisites
+
+<Variant region="in">
+- A UPI-enabled merchant account, configured in the Juspay dashboard
+- Your VPA handle allowlisted by the sponsor bank
+</Variant>
+
+<Variant region="sea">
+- A Google Pay merchant ID from the Google Pay & Wallet Console
+- Tokenisation settings configured for your acquirer
+- Your domain verified, if you are on web
+</Variant>
+
+## Integration
+
+<Variant integrationPath="hypercheckout">
+HyperCheckout renders Google Pay for you. Enable it in the dashboard, and it
+appears in the payment method list once the customer's device supports it. No
+client-side work is required beyond the standard HyperCheckout initialisation.
+</Variant>
+
+<Variant integrationPath="ec-sdk">
+The Express Checkout SDK exposes Google Pay as a payment method you render
+yourself. You control placement and styling; the SDK handles the wallet
+handshake and returns the payment payload.
+</Variant>
+
+<Variant integrationPath="ec-api">
+On the Express Checkout API path you own the entire wallet handshake. Collect
+the payment token client-side, then submit it on the payment request. Juspay
+does not render anything for you here.
+</Variant>
+
+### Platform notes
+
+<Variant platform="web">
+On web, availability depends on the browser and on whether the customer has a
+saved instrument. Always call the availability check before rendering the button,
+or you will show a payment method that fails on tap.
+</Variant>
+
+<Variant platform="android">
+On Android, Google Pay is available through the Play Services API. The SDK
+handles the binding; you need Play Services 19.0.0 or later on the device.
+</Variant>
+
+<Variant platform="ios">
+On iOS, Google Pay is only available in the browser, not as a native sheet. If
+you are building a native iOS app, use Apple Pay instead. This section exists
+mainly to show that a variant can tell the reader a path does not apply to them.
+</Variant>

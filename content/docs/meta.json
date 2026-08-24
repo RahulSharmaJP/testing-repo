@@ -1,0 +1,13 @@
+{
+  "title": "Juspay Docs",
+  "root": true,
+  "pages": [
+    "index",
+    "---Payment methods---",
+    "payment-methods/google-pay",
+    "payment-methods/upi-intent",
+    "payment-methods/pix",
+    "---API reference---",
+    "integrations/session-api"
+  ]
+}

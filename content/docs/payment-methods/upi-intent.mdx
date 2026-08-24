@@ -1,0 +1,18 @@
+---
+title: UPI Intent
+description: Trigger a UPI app handoff from your checkout.
+regions: ["in"]
+---
+
+REGION-ONLY content. This page is only reachable, and only appears in the
+navigation, when the region is set to India.
+
+UPI Intent hands the customer off to a UPI app on their device with the payment
+details prefilled. Unlike UPI Collect, there is no VPA entry step, so it is the
+better default on mobile.
+
+## Order states
+
+An intent payment moves through `PENDING` while the customer is in the UPI app,
+then to `CHARGED` or `AUTHORIZATION_FAILED`. Do not treat a return to your app as
+success — wait for the webhook.

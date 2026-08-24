@@ -1,0 +1,29 @@
+---
+title: Introduction
+description: Accept payments through Juspay's payment orchestration platform.
+icon: BookOpen
+---
+
+This is a proof-of-concept port of a slice of the Juspay documentation onto
+Fumadocs, built to test whether adaptive content can survive the move off GitBook.
+
+Use the selectors in the sidebar to change region, platform, and integration path.
+The navigation and the page contents both respond.
+
+## What is loaded here
+
+A deliberately small set of pages, chosen to cover all three content classes:
+
+| Page | Class | Behaviour |
+| --- | --- | --- |
+| Introduction | CORE | Always visible |
+| Google Pay | VARIANT | Body changes by region and platform |
+| Session API | VARIANT | Base URL and fields change by region |
+| UPI Intent | REGION-ONLY | Only in the nav for India |
+| PIX | REGION-ONLY | Only in the nav for Brazil |
+
+## Current selection
+
+You are reading the <CurrentVariant of="region" /> docs for
+<CurrentVariant of="platform" />, on the
+<CurrentVariant of="integrationPath" /> path.

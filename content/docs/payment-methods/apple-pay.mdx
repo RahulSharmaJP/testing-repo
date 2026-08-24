@@ -1,0 +1,234 @@
+---
+title: Apple Pay
+description: Accept Apple Pay on the web and in iOS apps, for one-time payments and mandates.
+regions: ["sea"]
+platforms: ["web", "ios"]
+---
+
+Apple Pay lets customers pay in your iOS, iPadOS, and watchOS apps, and on websites in
+Safari, using Face ID, Touch ID, or a double-click on Apple Watch. You never receive the
+customer's real card number — Apple returns a token instead.
+
+<Variant platform="android">
+Apple Pay is not available on Android. Switch the platform selector to Web or iOS to see
+the integration steps. For Android, see Google Pay instead.
+</Variant>
+
+## Key features
+
+**Express Checkout.** Customers can complete a purchase straight from a product page in a
+single tap, without adding to a cart or filling in a form.
+
+**Reduced data handling.** Every transaction requires Face ID, Touch ID, or a passcode.
+Because you receive a token rather than a card number, you handle less sensitive data.
+
+## Compatibility
+
+Supported platforms are Web and iOS native. All three Juspay integration paths support
+Apple Pay: HyperCheckout, Express Checkout SDK, and Express Checkout API.
+
+| Device | Browser or platform | Apple Pay | Authentication |
+| --- | --- | --- | --- |
+| MacBook | Safari | Yes | Touch ID |
+| MacBook | Non-Safari | Yes | QR handoff to iPhone |
+| iPhone | Safari | Yes | Face ID |
+| iPhone | Non-Safari or app | Yes | Face ID |
+| Non-Apple device | Any | No | Not supported |
+
+For the full device list, see the
+[Apple Pay documentation](https://support.apple.com/en-gb/102896).
+
+<Variant platform="web">
+## Web checkout journey
+
+**1. Presenting Apple Pay.** The customer selects Apple Pay on your checkout page. The
+system checks whether their device and browser support it — on Android or Windows, Apple
+Pay is not displayed at all.
+
+**2. User validation.** The Apple Pay sheet opens, pre-filled with payment, shipping, and
+contact details from the customer's Wallet.
+
+**3. Payment authentication.** The customer authenticates with Face ID (iPhone, newer
+iPads), Touch ID (MacBook, older iPhones), a QR handoff to iPhone (Macs without Touch ID,
+or a non-Safari browser on macOS), or a passcode when biometrics fail or are not enabled.
+
+**4. Payment processing.** After authentication the payment is processed in real time and
+the customer lands on your success screen.
+</Variant>
+
+## Dashboard setup
+
+<Variant platform="web">
+Log in to the [Juspay Dashboard](https://portal.juspay.in/) and follow three steps.
+
+**Step 1 — Create the Apple Pay authenticator.** Go to **Payments > PG Control >
+Authenticator**, click **+ Create Authentication**, and select `APPLEPAY_WEB` from the
+dropdown. Fill in the Apple Pay display name (shown to customers) and your domain name.
+
+**Step 2 — Verify your domain.** Download the domain association file from the form, host
+it at the required path on your domain, then click **Verify Domain**.
+
+**Step 3 — Enable token decryption.** Under **Payment method configurations**, turn on the
+**Apple Pay token decryption flow** toggle. This has to be enabled for each gateway
+separately.
+</Variant>
+
+<Variant platform="ios">
+Log in to the [Juspay Dashboard](https://portal.juspay.in/) and follow four steps.
+
+**Step 1 — Set up the Apple Pay authenticator.** Go to **Payments > PG Control >
+Authenticator**, click **+ Create Authentication**, and select `APPLEPAY_NATIVE`. Fill in
+the description and Apple Pay display name, then download the Certificate Signing Request
+(CSR) file that Juspay generates.
+
+**Step 2 — Generate the merchant certificate.** In your
+[Apple Developer account](https://developer.apple.com/account/), go to **Identifiers** and
+select the Merchant ID you created for Apple Pay. Under **Apple Pay Payment Processing
+Certificate**, click **Create Certificate**, upload the `.csr` file from step 1, and
+download the resulting `apple_pay.cer`.
+
+Take care not to do this in the **Apple Pay Merchant Identity Certificate** section — it is
+a different certificate and will not work. If you hold multiple certificates, you can
+activate or revoke each one individually from the same screen.
+
+**Step 3 — Upload the certificate.** Back in the Juspay Dashboard, upload `apple_pay.cer`
+in the Apple Pay certificate section and click **Proceed** to finish creating the
+authentication account.
+
+**Step 4 — Enable token decryption.** Under **Payment method configurations**, turn on the
+**Apple Pay token decryption flow** toggle, once per gateway.
+</Variant>
+
+## Integration
+
+<Variant integrationPath="ec-api">
+On the Express Checkout API path you own the entire Apple Pay handshake.
+
+**Check eligibility.** Because you render your own payment page, you have to adjust the UI
+based on whether the customer's device supports Apple Pay. Call the Apple Pay eligibility
+API (`POST /sdk/initiate`) with `payment_method` set to `APPLEPAY` and
+`payment_method_type` set to `WALLET`.
+
+When passing `requestor_domain` in `additionalInfo`, send only the domain name — for
+example `www.example.com`. Including `https://` or `http://` causes the transaction to
+fail.
+
+**Initiate the transaction.** After the customer authenticates, Apple returns a payment
+token. Forward the complete token payload in `transient_info` on the `/txns` call, with
+`payment_method` set to `APPLEPAY` and `payment_method_type` set to `WALLET`.
+
+For background, see Apple's
+[implementation guide](https://developer.apple.com/apple-pay/implementation/) and the
+[payment token reference](https://developer.apple.com/documentation/apple_pay_on_the_web/applepaypaymenttoken).
+</Variant>
+
+<Variant integrationPath="hypercheckout">
+HyperCheckout renders Apple Pay for you, so there is no client-side work beyond the
+standard initialisation.
+
+Log in to the Juspay Dashboard and go to the **Marketplace** tab to have Apple Pay enabled
+on your payment page. Juspay releases the change to the CUG testing environment first, so
+you can run end-to-end tests on your app or site before going live.
+</Variant>
+
+<Variant integrationPath="ec-sdk">
+On the Express Checkout SDK path you control placement and styling; the SDK handles the
+wallet handshake.
+
+**1. Create the customer.** Call the Create Customer API before starting the transaction
+flow. Either customer creation or order creation is mandatory to proceed.
+
+**2. Instantiate HyperServices.** Include the SDK script in your HTML, then create an
+instance of the `HyperServices` class. Load the script before initialising.
+
+**3. Initiate the SDK.** Call `initiate` on the instance. It takes a payload object and an
+optional callback handler, needed only for iframe-based integrations. For iframe
+integrations, call `initiate` after `onLoad()` fires if the element carrying
+`entryPointId` is loaded statically, or after verifying the element is in the DOM if it is
+loaded dynamically.
+
+**4. Check eligibility.** Call the process function with `action` set to
+`sdkWalletEligibility`. Invoke this again whenever the order amount changes.
+
+**5. Create the order.** Call the Create Order API to get a `client_auth_token`.
+
+**6. Initiate the transaction.** When the customer taps **Proceed to Pay**, trigger the
+`walletTxn` process call. Juspay displays the Apple Pay sheet, the customer authenticates,
+and Juspay processes the token in the background before returning the result.
+
+<Variant platform="ios">
+On iOS native, render the button using Apple's own
+[`PKPaymentButton`](https://developer.apple.com/documentation/passkit/pkpaymentbutton) to
+stay within Apple's design and compliance rules, and only after eligibility is confirmed.
+Mandates require iOS SDK `2.2.4.10` or later.
+</Variant>
+</Variant>
+
+## Eligibility responses
+
+The `applePayCapabilities` method contacts Apple's servers and returns the device's
+`paymentCredentialStatus`. Use it to decide whether to show the Apple Pay button.
+
+| Value | What it means | What to do |
+| --- | --- | --- |
+| `paymentCredentialsAvailable` | Device supports Apple Pay and Wallet holds at least one qualifying credential | Show the button; offer Apple Pay as the primary option |
+| `paymentCredentialStatusUnknown` | Device supports Apple Pay; Wallet state unknown | Show the button as a possible option |
+| `paymentCredentialsUnavailable` | Device supports Apple Pay but Wallet is empty | Offer it, but not as the sole or default option, so the customer can set it up mid-purchase |
+| `applePayUnsupported` | Device does not support Apple Pay | Do not show the button |
+
+## Token types: DPAN and MPAN
+
+Apple Pay returns a tokenised card number rather than the real one. Which token you get
+depends on the issuer and network, and it changes how you can use the result.
+
+| Token | Scope | Behaviour | Use for |
+| --- | --- | --- | --- |
+| DPAN (Device PAN) | Per device | A new DPAN may be returned on each transaction; cannot be reliably reused | One-time payments |
+| MPAN (Merchant PAN) | Per merchant, across the customer's devices | Stable; can be stored and reused | Subscriptions, auto-debits, saved-card flows |
+
+Not every card supports MPAN. Where the issuer or network does not, Apple Pay falls back
+to DPAN.
+
+Set `paymentMethod` to `APPLEPAY` for one-time (DPAN) payments and `JP_APPLEPAY` for
+mandate (MPAN) payments. For mandates also set `shouldCreateMandate` to `true`; for
+one-time payments set it to `false` and omit the mandate block.
+
+To confirm which token a completed transaction used, check `issuer_token_type` in the
+Order Status response.
+
+## Mandates
+
+<Variant integrationPath="hypercheckout">
+Mandate setup follows the same dashboard flow as one-time payments. Contact Juspay to have
+mandate support enabled on your payment page.
+</Variant>
+
+<Variant integrationPath={["ec-sdk", "ec-api"]}>
+The mandate flow mirrors the one-time flow, with a `mandate` block added to the eligibility
+call and `shouldCreateMandate` set to `true` on the transaction.
+
+Required mandate fields are `frequency`, `max_amount`, and `management_url` — a URL where
+the customer can change or remove the payment method backing the recurring payment.
+Optional fields include `billing_agreement`, `recurring_amount`, `start_date`, `end_date`,
+and `payment_description`.
+
+`billing_agreement` accepts up to 500 characters of localised text describing the amount,
+frequency, and cancellation terms. It appears on the Apple Pay sheet but does not replace
+the full payment terms you present elsewhere. If you omit `recurring_amount`, the sheet
+shows `max_amount` instead.
+
+Order creation uses the same endpoint as one-time orders, with `options.create_mandate` set
+to `REQUIRED` or `OPTIONAL`. `REQUIRED` means the transaction must become a mandate;
+`OPTIONAL` defers the decision to the `should_create_mandate` flag on the `/txns` call.
+
+A mandate moves through `CREATED`, then `ACTIVE` once the gateway accepts it. From there it
+can become `PAUSED` (customer-initiated), `REVOKED`, or `EXPIRED`. `FAILURE` means setup
+did not complete and you need to create a new mandate.
+</Variant>
+
+## Enforcing a gateway
+
+To pin Apple Pay transactions to a specific gateway, configure the gateway reference ID in
+the Juspay Dashboard, then pass the same value as `gatewayReferenceId` on the
+`sdkWalletEligibility`, `createOrder`, and `walletTxn` calls. Passing it inconsistently
+across the three will break the flow.

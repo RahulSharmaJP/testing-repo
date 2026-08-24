@@ -1,0 +1,66 @@
+---
+title: Session API
+description: Create a checkout session and obtain a client auth token.
+integrationPaths: ["hypercheckout", "ec-sdk"]
+---
+
+The Session API creates an order and returns a `clientAuthToken` that your client
+uses to initialise checkout. This page is a VARIANT page on the integration
+dimension: it does not apply to the Express Checkout API path, so it drops out of
+the navigation when you select that path.
+
+## Endpoint
+
+<Variant region="in">
+```
+POST https://api.juspay.in/session
+```
+</Variant>
+
+<Variant region={["sea", "mena"]}>
+```
+POST https://api.juspay.io/session
+```
+</Variant>
+
+<Variant region={["br", "pe", "eu"]}>
+```
+POST https://api.juspay.io/session
+```
+</Variant>
+
+## Request
+
+```json
+{
+  "order_id": "ord_12345",
+  "amount": "499.00",
+  "customer_id": "cust_98765",
+  "payment_page_client_id": "your_client_id",
+  "action": "paymentPage",
+  "return_url": "https://yourdomain.com/callback"
+}
+```
+
+<Variant region="in">
+For India, `amount` is in rupees as a decimal string. Passing paise here is the
+single most common integration error.
+</Variant>
+
+<Variant region="sea">
+For Southeast Asia, currency is inferred from your merchant configuration. Send
+`currency` explicitly if you are configured for more than one.
+</Variant>
+
+## Response
+
+The response contains a `clientAuthToken` scoped to this order, with a short
+expiry. Mint it server-side and never cache it across orders.
+
+<Variant integrationPath="hypercheckout">
+Pass the token to `HyperServices.openPaymentPage`.
+</Variant>
+
+<Variant integrationPath="ec-sdk">
+Pass the token when initialising the Express Checkout SDK.
+</Variant>
